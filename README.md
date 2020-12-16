@@ -4,5 +4,4 @@
 **Antonios Ourdas | AEM: 9358**
 
 # Introduction
-In this 2nd assignment we were asked to implement an all kNN algorithm to find the k nearest neighbors for every point of a given corpus set X using MPI.
-<img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">
+In this 2nd assignment we were asked to implement an all kNN algorithm to find the k nearest neighbors for every point of a given corpus set <img src="https://render.githubusercontent.com/render/math?math=X"> using MPI.
