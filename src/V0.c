@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 // #include "mpi.h"
 
 // Definition of the kNN result struct
@@ -54,7 +55,7 @@ void swapDouble(double* a, double* b) {
 
 int partition(double* D, int* sortedIndexes, int start, int end)
 {  
-    int pivot = D[end]; // pivot  
+    double pivot = D[end]; // pivot  
     int i = (start - 1); // Index of smaller element  
     for (int j = start; j <= end - 1; j++)  
     {  
@@ -98,17 +99,15 @@ void quicksort(double* D, int* sortedIndexes, int start, int end)
    This is a simple distance calculator function
    used for calculating euclidean distance the old fashioned way
 */
-void findDMatrix(double* X, double* Y,int n,int m,int d, double* D) {
-	printf("\nD = \n");
-	for(int i = 0; i < m; ++i) {
-		for(int j = 0; j < n; ++j) {
-			D[i*n+j] = 0;
+void findDMatrix(double* X, double* Y,int n, int m, int d, double* D) {
+	for(int i = 0; i < n; ++i) {
+		for(int j = 0; j < m; ++j) {
+			D[i*m+j] = 0;
 			for(int k = 0; k < d; ++k) {
 				D[i*n+j] += (X[i*d+k] - Y[j*d+k])*(X[i*d+k] - Y[j*d+k]);
 			}
-			printf("%03d ", D[i*n+j]);
+			D[i*m+j] = sqrt(D[i*m+j]);
 		}
-		printf("\n");
 	}	
 }
 
@@ -132,9 +131,8 @@ void findDMatrix(double* X, double* Y,int n,int m,int d, double* D) {
 	\return The kNN result
 */
 
-knnresult kNN(double * X, double * Y, int n, int m, int d, int k) 
+knnresult kNN(double * X, double * Y, int n, int m, int d, int k, double* D) 
 {
-	int* D = (int*)malloc(n*m*sizeof(int));
 	findDMatrix(X, Y, n, m, d, D);
 	knnresult result;
 	int* sortedIndexes = NULL;
@@ -156,91 +154,75 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k)
 // Main function
 int main(int argc, char* argv[]) {
 	
-	/*srand(time(NULL));
+	srand(time(NULL));
 	if(argc < 3) {
-		printf("Usage: ./V0 m n\n");
+		printf("Usage: ./V0 m n k\n");
 		return -1;
 	}
 
-	int m = atoi(argv[1]);
-	int n = atoi(argv[2]);
+	int n = atoi(argv[1]);
+	int m = atoi(argv[2]);
 	int d = 2;
+	int k = atoi(argv[3]);
 
 	// int X2[4][2] = {{1, 2}, {-1, 3}, {0, 1}, {4, 1}};
 	// int Y2[3][2] = {{3, 4}, {2, -1}, {4, 5}};
 
-	int* X = (int*)malloc(m*d*sizeof(int));
-	int* Y = (int*)malloc(n*d*sizeof(int));
+	double* X = (double*)malloc(n*d*sizeof(double));
+	double* Y = (double*)malloc(m*d*sizeof(double));
 
-	
-	for(int i = 0; i < m; ++i) {
-		for(int k = 0; k < d; ++k) {
-			X[i*d+k] = rand() % 100;
-		}
-	}
 	
 	for(int i = 0; i < n; ++i) {
 		for(int k = 0; k < d; ++k) {
-			Y[i*d+k] = rand() % 10;
+			X[i*d+k] = -5.0 + (double)rand() / RAND_MAX * 10.0;
+		}
+	}
+	
+	for(int i = 0; i < m; ++i) {
+		for(int k = 0; k < d; ++k) {
+			Y[i*d+k] = -5.0 + (double)rand() / RAND_MAX * 10.0;
 		}
 	}
 	
 	printf("\nX = \n");
-	for(int i = 0; i < m; ++i) {
-		for(int k = 0; k < d; ++k) {
-			printf("%d ", X[i*d+k]);
-		}
-		printf("\n");
-	}
+	printMatrixDouble(X, n, d);
 
 	printf("\nY = \n");
-	for(int i = 0; i < n; ++i) {
-		for(int k = 0; k < d; ++k) {
-			printf("%d ", Y[i*d+k]);
-		}
-		printf("\n");
-	}
+	printMatrixDouble(Y, m, d);
 
-	knnresult result = kNN(X, Y, n, m, d, 1);*/
-
-	srand(time(NULL));
-
-
-	int n = atoi(argv[1]);
-	double* D = (double*)malloc(n*sizeof(double));
+	double* D = (double*)malloc(n*m*sizeof(double));
 	if(D == NULL) {
-		printf("Failed to allocate memory\n");
+		printf("Couldn't allocate memory for D\n");
 		return -1;
 	}
 
-	for(int i = 0; i < n; ++i) {
-		D[i] = (double)rand() / RAND_MAX * atoi(argv[2]);
-	}
-	printMatrixDouble(D, 1, n);
-
-	int* sortedIndexes = (int*)malloc(10*sizeof(int));
+	int* sortedIndexes = (int*)malloc(m*sizeof(int));
 	if(sortedIndexes == NULL) {
-		printf("Failed to allocate memory\n");
+		printf("Couldn't allocate memory for sortedIndexes\n");
 		return -1;
 	}
 
-	for(int i = 0; i < n; ++i)
-		sortedIndexes[i] = i;
-
-	printMatrixInt(sortedIndexes, 1, n);
-	printf("\n");
-	quicksort(D, sortedIndexes, 0, n-1);
-
-	printMatrixDouble(D, 1, n);
-	printMatrixInt(sortedIndexes, 1, n);
-	printf("\n");
-	for(int i = 0; i < n-1; ++i) {
-		if(D[i] > D[i+1]) {
-			printf("False\n");
-			break;
+	findDMatrix(X, Y, n, m, d, D);
+	printf("\nD = \n");
+	printMatrixDouble(D, n, m);
+	printf("\nPrinting line by line:\n");
+	for(int i = 0; i < n; ++i) {
+		for(int j = 0; j < m; ++j) {
+			sortedIndexes[j] = j;
 		}
+		printf("\n=========================================\n");
+		printMatrixInt(sortedIndexes, 1, m);
+		printMatrixDouble(D+i*m, 1, m);
+		printf("\nSorting D(%d,:):\n", i);
+		quicksort(D+i*m, sortedIndexes, 0, m-1);
+		printf("Done. Printing %d nearest neighbors:\n", k);
+		printMatrixInt(sortedIndexes, 1, k);
+		printMatrixDouble(D+i*m, 1, k);
+		printf("\n=========================================\n");
 	}
 
+	free(X);
+	free(Y);
 	free(D);
 	free(sortedIndexes);
 }
