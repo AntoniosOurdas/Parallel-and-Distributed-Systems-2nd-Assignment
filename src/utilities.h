@@ -3,7 +3,6 @@
 #include <time.h>
 #include <math.h>
 #include <cblas.h>
-#include "mpi.h"
 
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
