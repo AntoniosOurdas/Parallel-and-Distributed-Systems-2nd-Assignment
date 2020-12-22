@@ -1,22 +1,5 @@
 #include "utilities.h"
 
-#define BILLION 1000000000L;
-
-struct timespec start_time;
-struct timespec stop_time;
-
-double calculateExecutionTime()
-{
-
-    clock_gettime(CLOCK_MONOTONIC, &stop_time);
-
-    double dSeconds = (stop_time.tv_sec - start_time.tv_sec);
-
-    double dNanoSeconds = (double)(stop_time.tv_nsec - start_time.tv_nsec) / BILLION;
-
-    return dSeconds + dNanoSeconds;
-}
-
 // Definition of the kNN result struct
 typedef struct knnresult {
 	int * nidx;		 //!< Indices (0-based) of nearest neighbors   [m-by-k]
@@ -31,14 +14,12 @@ typedef struct knnresult {
    =================================================================
 */
 
-//! Compute k nearest neighbors of each point in X [n-by-d]
+//! Compute distributed all-kNN of points in X
 /*!
 
 
 	\param X Corpus data points 			[n-by-d]
-	\param Y Query data points 				[m-by-d]
 	\param n Number of corpus points		[scalar]
-	\param m Number of query points 		[scalar]
 	\param d Number of dimensions 			[scalar]
 	\param k Number of neighbors 			[scalar]
 	
@@ -46,12 +27,29 @@ typedef struct knnresult {
 	\return The kNN result
 */
 
-knnresult kNN(double * X, double * Y, int n, int m, int d, int k) 
+knnresult distrAllkNN(double* X, int n, int d, int k) 
 {
 	knnresult result;
+	
+	int  numtasks, rank, len, rc; 
+   	char hostname[MPI_MAX_PROCESSOR_NAME];
+	// initialize MPI  
+   	MPI_Init(&argc,&argv);
+
+   	// get number of tasks 
+   	MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
+
+   	// get my rank  
+   	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+
+   	// this one is obvious  
+   	MPI_Get_processor_name(hostname, &len);
+   	printf ("Number of tasks= %d My rank= %d Running on %s Length %d\n", numtasks,rank,hostname,len);
+
+        // do some work with message passing 
 
 	// Allocate memory for distance matrix D
-	double* D = (double*)malloc(m*n*sizeof(double));
+	double* D = (double*)malloc(n*n*sizeof(double));
 	if(D == NULL) {	
 		printf("Couldn't allocate memory for D\n");
 		return result;
@@ -65,26 +63,26 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k)
 	}
 
 	// Calculate distance matrix D
-	findDMatrix(X, Y, n, m, d, D);
+	findDMatrix(X, X, n, n, d, D);
 
-	result.nidx = (int*)malloc(m*k*sizeof(int));
+	result.nidx = (int*)malloc(n*k*sizeof(int));
 	if(result.nidx == NULL) {
 		printf("Couldn't allocate memory for nidx\n");
 		return result;
 	}
 
-	result.ndist = (double*)malloc(m*k*sizeof(double));
+	result.ndist = (double*)malloc(n*k*sizeof(double));
 	if(result.ndist == NULL) {
 		printf("Couldn't allocate memory for ndist\n");
 		return result;
 	}
 
-	result.m = m;
+	result.m = n;
 	result.k = k;
 
 	// For every point in query set Y
 	// find k nearest points from corpus set X
-	for(int i = 0; i < m; ++i) {
+	for(int i = 0; i < n; ++i) {
 		for(int j = 0; j < n; ++j) {
 			indices[j] = j;
 		}
@@ -109,6 +107,8 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k)
 	free(D);
 	free(indices);
 	return result;
+	// done with MPI  
+   	MPI_Finalize();
 }
 
 
@@ -118,29 +118,24 @@ int main(int argc, char* argv[]) {
 	
 	srand(time(NULL));
 	if(argc < 3) {
-		printf("Usage: ./V0 m n d k\n");
+		printf("Usage: ./V1 n d k\n");
 		return -1;
 	}
 
 	// Set variables
-	int n, m, d, k;
+	int n, d, k;
 
 	if((n = atoi(argv[1])) <= 0) {
 		printf("n must be positive integer\n");
 		return -1;
 	}
 	
-	if((m = atoi(argv[2])) <= 0) {
-		printf("m must be positive integer\n");
-		return -1;
-	}
-	
-	if((d = atoi(argv[3])) <= 0) {
+	if((d = atoi(argv[2])) <= 0) {
 		printf("d must be positive integer\n");
 		return -1;
 	}
 
-	if((k = atoi(argv[4])) <= 0) {
+	if((k = atoi(argv[3])) <= 0) {
 		printf("k must be positive integer\n");
 		return -1;
 	}
@@ -150,44 +145,29 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	// Initialize corpus and query sets (X and Y respectively)	
+	// Initialize X	
 	double* X = (double*)malloc(n*d*sizeof(double));
 	if(X == NULL) {
 		printf("Couldn't allocate memory for X\n");
 		return -1;
 	}
-	
-	double* Y = (double*)malloc(m*d*sizeof(double));
-	if(Y == NULL) {
-		printf("Couldn't allocate memory for Y\n");
-		return -1;
-	}
-
 
 	for(int i = 0; i < n; ++i) {
 		for(int k = 0; k < d; ++k) {
 			X[i*d+k] = -5.0 + (double)rand() / RAND_MAX * 10.0;
 		}
 	}
-	
-	for(int i = 0; i < m; ++i) {
-		for(int k = 0; k < d; ++k) {
-			Y[i*d+k] = -5.0 + (double)rand() / RAND_MAX * 10.0;
-		}
-	}
 
 	printMatrixMatlabFormat(X, n, d);
-	printMatrixMatlabFormat(Y, m, d);
 	// Find and print knnresult
-	knnresult kNNresult = kNN(X, Y, n, m, d, k);
+	knnresult kNNresult = distrAllkNN(X, n, d, k);
 
 	printf("%d nearest neighbors distances:\n", k);
-	printMatrixDouble(kNNresult.ndist, m, k);
+	printMatrixDouble(kNNresult.ndist, n, k);
 	printf("\n%d nearest neighbors indexes:\n", k);
-	printMatrixInt(kNNresult.nidx, m, k);
+	printMatrixInt(kNNresult.nidx, n, k);
 
 	free(X);
-	free(Y);
 	free(kNNresult.nidx);
 	free(kNNresult.ndist);
 
