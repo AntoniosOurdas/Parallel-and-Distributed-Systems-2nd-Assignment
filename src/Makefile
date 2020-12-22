@@ -1,9 +1,9 @@
 CC=gcc
-CFLAGS=-I Docker-main/pds-codebase/2nd_Assignment -O3
+CFLAGS=-O3
 LIBRARIES = -lm -lopenblas
 
 V0:
-	$(CC) $(CFLAGS) Docker-main/pds-codebase/2nd_Assignment/V0.c Docker-main/pds-codebase/2nd_Assignment/utilities.c -o Docker-main/pds-codebase/2nd_Assignment/V0 $(LIBRARIES)
+	$(CC) $(CFLAGS) V0.c utilities.c -o V0 $(LIBRARIES)
 
 all: V0
 
