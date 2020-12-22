@@ -50,15 +50,15 @@ void printMatrixMatlabFormat(double* A, int n, int m) {
   printf("]\n");
 }
 
-/* 
+/*
    =================================================================
    =================================================================
    This quicksort is used for k-select implementation
 */
-void swapInt(int* a, int* b)  
-{  
-    int t = *a;  
-    *a = *b;  
+void swapInt(int* a, int* b)
+{
+    int t = *a;
+    *a = *b;
     *b = t;
 }
 
@@ -69,43 +69,43 @@ void swapDouble(double* a, double* b) {
 }
 
 int partition(double* D, int* indices, int start, int end)
-{  
-    double pivot = D[end]; // pivot  
-    int i = (start - 1); // Index of smaller element  
-    for (int j = start; j <= end - 1; j++)  
-    {  
-        // If current element is smaller than the pivot 
-        if (D[j] < pivot)  
-        {  
-            i++; // increment index of smaller element  
+{
+    double pivot = D[end]; // pivot
+    int i = (start - 1); // Index of smaller element
+    for (int j = start; j <= end - 1; j++)
+    {
+        // If current element is smaller than the pivot
+        if (D[j] < pivot)
+        {
+            i++; // increment index of smaller element
             swapDouble(D+i, D+j);
             swapInt(indices+i, indices+j);
         }
-    }  
+    }
     swapDouble(D+i+1, D+end);
     swapInt(indices+i+1, indices+end);
-    return (i + 1);  
+    return (i + 1);
 }
 
 
 // Quick sort implementation to sort only k first elements
-void quicksort(double* D, int* indices, int start, int end, int k)  
-{  
-    if (start < end)  
-    {  
+void quicksort(double* D, int* indices, int start, int end, int k)
+{
+    if (start < end)
+    {
         // Find partition. After this command arr[p] is
         // in the right position
         int pi = partition(D, indices, start, end);
-        // Separately sort elements before  
+        // Separately sort elements before
         // partition and after partition
         // check which to sort according to k
-        
-        // If k is smaller than partition then we don't need 
+
+        // If k is smaller than partition then we don't need
         // to sort elements biggest than p
         // else sort both parts (before and after p)
-        if((k - 1) <= pi)  
+        if((k - 1) <= pi)
         {
-        	quicksort(D, indices, start, pi-1, k);  
+        	quicksort(D, indices, start, pi-1, k);
         } else if((k - 1) > pi)
         {
         	quicksort(D, indices, start, pi - 1, k);
@@ -114,24 +114,24 @@ void quicksort(double* D, int* indices, int start, int end, int k)
     }
 }
 
-/* 
+/*
    =================================================================
    =================================================================
 */
 
 
-/* 
+/*
    =================================================================
    =================================================================
    This is a simple distance calculator function
-   used for calculating euclidean distance between 
+   used for calculating euclidean distance between
    every X and Y point the old fashioned way
    X [m-by-d]
    Y [m-by-d]
    D [m-by-n]
 */
 void findDistanceMatrix(double* X, double* Y, int n, int m, int d, double* D, int low, int high) {
-  
+
   // Block size of query Y
   int size = high - low + 1;
 
@@ -182,7 +182,7 @@ void findDistanceMatrix(double* X, double* Y, int n, int m, int d, double* D, in
   printf("X.*X = \n");
   printMatrixDouble(dotP_X, n, d);
   printf("e2 = \n");
-  printMatrixDouble(e2, size, d);  
+  printMatrixDouble(e2, size, d);
   printf("A = \n");
   printMatrixDouble(A, size, n);
   printf("Y = \n");

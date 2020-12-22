@@ -2,21 +2,6 @@
 
 #define BILLION 1000000000L;
 
-struct timespec start_time;
-struct timespec stop_time;
-
-double calculateExecutionTime()
-{
-
-    clock_gettime(CLOCK_MONOTONIC, &stop_time);
-
-    double dSeconds = (stop_time.tv_sec - start_time.tv_sec);
-
-    double dNanoSeconds = (double)(stop_time.tv_nsec - start_time.tv_nsec) / BILLION;
-
-    return dSeconds + dNanoSeconds;
-}
-
 // Definition of the kNN result struct
 typedef struct knnresult {
 	int * nidx;		 //!< Indices (0-based) of nearest neighbors   [m-by-k]
@@ -26,7 +11,7 @@ typedef struct knnresult {
 } knnresult;
 
 
-/* 
+/*
    =================================================================
    =================================================================
 */
@@ -41,18 +26,18 @@ typedef struct knnresult {
 	\param m Number of query points 		[scalar]
 	\param d Number of dimensions 			[scalar]
 	\param k Number of neighbors 			[scalar]
-	
+
 
 	\return The kNN result
 */
 
-knnresult kNN(double * X, double * Y, int n, int m, int d, int k) 
+knnresult kNN(double * X, double * Y, int n, int m, int d, int k)
 {
 	knnresult result;
 
 	// Allocate memory for distance matrix D
 	double* D = (double*)malloc(m*n*sizeof(double));
-	if(D == NULL) {	
+	if(D == NULL) {
 		printf("Couldn't allocate memory for D\n");
 		return result;
 	}
@@ -94,7 +79,7 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k)
 		// printf("\nSorting D(%d,:):\n", i);
 
 		quicksort(D+i*n, indices, 0, n-1, k);
-		
+
 		// printf("Done. Printing %d nearest neighbors:\n", k);
 		// printMatrixInt(indices, 1, n);
 		// printMatrixDouble(D+i*n, 1, n);
@@ -115,7 +100,7 @@ knnresult kNN(double * X, double * Y, int n, int m, int d, int k)
 // Main testing function
 // Takes n, m, k as command line arguments
 int main(int argc, char* argv[]) {
-	
+
 	srand(time(NULL));
 	if(argc < 3) {
 		printf("Usage: ./V0 m n d k\n");
@@ -129,12 +114,12 @@ int main(int argc, char* argv[]) {
 		printf("n must be positive integer\n");
 		return -1;
 	}
-	
+
 	if((m = atoi(argv[2])) <= 0) {
 		printf("m must be positive integer\n");
 		return -1;
 	}
-	
+
 	if((d = atoi(argv[3])) <= 0) {
 		printf("d must be positive integer\n");
 		return -1;
@@ -144,19 +129,19 @@ int main(int argc, char* argv[]) {
 		printf("k must be positive integer\n");
 		return -1;
 	}
-	
+
 	if(k > n) {
 		printf("You are asking for more neighbors than there are\n");
 		return -1;
 	}
 
-	// Initialize corpus and query sets (X and Y respectively)	
+	// Initialize corpus and query sets (X and Y respectively)
 	double* X = (double*)malloc(n*d*sizeof(double));
 	if(X == NULL) {
 		printf("Couldn't allocate memory for X\n");
 		return -1;
 	}
-	
+
 	double* Y = (double*)malloc(m*d*sizeof(double));
 	if(Y == NULL) {
 		printf("Couldn't allocate memory for Y\n");
@@ -169,7 +154,7 @@ int main(int argc, char* argv[]) {
 			X[i*d+k] = -5.0 + (double)rand() / RAND_MAX * 10.0;
 		}
 	}
-	
+
 	for(int i = 0; i < m; ++i) {
 		for(int k = 0; k < d; ++k) {
 			Y[i*d+k] = -5.0 + (double)rand() / RAND_MAX * 10.0;

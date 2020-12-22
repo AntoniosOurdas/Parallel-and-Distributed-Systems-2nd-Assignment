@@ -7,6 +7,8 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
+double calculateExecutionTime();
+
 void printMatrixInt(int* A, int n, int m);
 
 void printMatrixDouble(double* A, int n, int m);
