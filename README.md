@@ -5,3 +5,5 @@
 
 # Introduction
 In this 2nd assignment we were asked to implement an all kNN algorithm to find the k nearest neighbors for every point of a given corpus set using MPI.
+
+# V0
