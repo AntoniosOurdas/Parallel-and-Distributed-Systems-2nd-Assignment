@@ -111,11 +111,13 @@ knnresult distrAllkNN(double* X, int n, int d, int k)
  	MPI_Get_processor_name(hostname, &len);
  	printf ("Number of tasks = %d My rank = %d Running on %s Length %d\n", numtasks, rank, hostname, len);
 
-
+	if(rank == 0)
+		printf("Mother\n");
+	else
+		printf("Daughter\n");
 	// do some work with message passing
 
-	kNN(X, X, n, n, d, k, result);
-
+	// kNN(X, X, n, n, d, k, result);
 	MPI_Finalize();
 
 	return *result;
@@ -174,10 +176,10 @@ int main(int argc, char* argv[]) {
 	// Find and print knnresult
 	knnresult kNNresult = distrAllkNN(X, n, d, k);
 
-	printf("%d nearest neighbors distances:\n", k);
-	printMatrixDouble(kNNresult.ndist, n, k);
-	printf("\n%d nearest neighbors indexes:\n", k);
-	printMatrixInt(kNNresult.nidx, n, k);
+	// printf("%d nearest neighbors distances:\n", k);
+	// printMatrixDouble(kNNresult.ndist, n, k);
+	// printf("\n%d nearest neighbors indexes:\n", k);
+	// printMatrixInt(kNNresult.nidx, n, k);
 
 	free(X);
 	free(kNNresult.nidx);
