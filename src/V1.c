@@ -1,5 +1,5 @@
 #include "utilities.h"
-
+#include "mpi.h"
 // Definition of the kNN result struct
 typedef struct knnresult {
 	int * nidx;		 //!< Indices (0-based) of nearest neighbors   [m-by-k]
@@ -9,7 +9,7 @@ typedef struct knnresult {
 } knnresult;
 
 
-/* 
+/*
    =================================================================
    =================================================================
 */
@@ -22,67 +22,50 @@ typedef struct knnresult {
 	\param n Number of corpus points		[scalar]
 	\param d Number of dimensions 			[scalar]
 	\param k Number of neighbors 			[scalar]
-	
+
 
 	\return The kNN result
 */
 
-knnresult distrAllkNN(double* X, int n, int d, int k) 
+void kNN(double * X, double * Y, int n, int m, int d, int k, knnresult* result)
 {
-	knnresult result;
-	
-	int  numtasks, rank, len, rc; 
-   	char hostname[MPI_MAX_PROCESSOR_NAME];
-	// initialize MPI  
-   	MPI_Init(&argc,&argv);
-
-   	// get number of tasks 
-   	MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
-
-   	// get my rank  
-   	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-
-   	// this one is obvious  
-   	MPI_Get_processor_name(hostname, &len);
-   	printf ("Number of tasks= %d My rank= %d Running on %s Length %d\n", numtasks,rank,hostname,len);
-
-        // do some work with message passing 
+	// knnresult result;
 
 	// Allocate memory for distance matrix D
-	double* D = (double*)malloc(n*n*sizeof(double));
-	if(D == NULL) {	
+	double* D = (double*)malloc(m*n*sizeof(double));
+	if(D == NULL) {
 		printf("Couldn't allocate memory for D\n");
-		return result;
+		return;
 	}
 
 	// Allocate memory for indices matrix
 	int* indices = (int*)malloc(n*sizeof(int));
 	if(indices == NULL) {
 		printf("Couldn't allocate memory for indices\n");
-		return result;
+		return;
 	}
 
 	// Calculate distance matrix D
-	findDMatrix(X, X, n, n, d, D);
+	findDMatrix(X, Y, n, m, d, D);
 
-	result.nidx = (int*)malloc(n*k*sizeof(int));
-	if(result.nidx == NULL) {
+	result->nidx = (int*)malloc(m*k*sizeof(int));
+	if(result->nidx == NULL) {
 		printf("Couldn't allocate memory for nidx\n");
-		return result;
+		return;
 	}
 
-	result.ndist = (double*)malloc(n*k*sizeof(double));
-	if(result.ndist == NULL) {
+	result->ndist = (double*)malloc(m*k*sizeof(double));
+	if(result->ndist == NULL) {
 		printf("Couldn't allocate memory for ndist\n");
-		return result;
+		return;
 	}
 
-	result.m = n;
-	result.k = k;
+	result->m = m;
+	result->k = k;
 
 	// For every point in query set Y
 	// find k nearest points from corpus set X
-	for(int i = 0; i < n; ++i) {
+	for(int i = 0; i < m; ++i) {
 		for(int j = 0; j < n; ++j) {
 			indices[j] = j;
 		}
@@ -92,30 +75,59 @@ knnresult distrAllkNN(double* X, int n, int d, int k)
 		// printf("\nSorting D(%d,:):\n", i);
 
 		quicksort(D+i*n, indices, 0, n-1, k);
-		
+
 		// printf("Done. Printing %d nearest neighbors:\n", k);
 		// printMatrixInt(indices, 1, n);
 		// printMatrixDouble(D+i*n, 1, n);
 		// printf("\n=========================================\n");
 
 		for(int l = 0; l < k; ++l) {
-			result.ndist[i*k+l] = D[i*n+l];
-			result.nidx[i*k+l] = indices[l];
+			result->ndist[i*k+l] = D[i*n+l];
+			result->nidx[i*k+l] = indices[l];
 		}
 	}
 
 	free(D);
 	free(indices);
-	return result;
-	// done with MPI  
-   	MPI_Finalize();
+	return;
+}
+
+knnresult distrAllkNN(double* X, int n, int d, int k)
+{
+	knnresult* result = (knnresult*)malloc(1*sizeof(knnresult));
+
+	int  numtasks, rank, len, rc;
+  char hostname[MPI_MAX_PROCESSOR_NAME];
+	// initialize MPI
+  MPI_Init(NULL, NULL);
+
+  // get number of
+	MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
+
+	// get my rank
+ 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+
+ 	// this one is obvious
+ 	MPI_Get_processor_name(hostname, &len);
+ 	printf ("Number of tasks = %d My rank = %d Running on %s Length %d\n", numtasks, rank, hostname, len);
+
+
+	// do some work with message passing
+
+	kNN(X, X, n, n, d, k, result);
+
+	MPI_Finalize();
+
+	return *result;
+	// done with MPI
+
 }
 
 
 // Main testing function
 // Takes n, m, k as command line arguments
 int main(int argc, char* argv[]) {
-	
+
 	srand(time(NULL));
 	if(argc < 3) {
 		printf("Usage: ./V1 n d k\n");
@@ -129,7 +141,7 @@ int main(int argc, char* argv[]) {
 		printf("n must be positive integer\n");
 		return -1;
 	}
-	
+
 	if((d = atoi(argv[2])) <= 0) {
 		printf("d must be positive integer\n");
 		return -1;
@@ -139,13 +151,13 @@ int main(int argc, char* argv[]) {
 		printf("k must be positive integer\n");
 		return -1;
 	}
-	
+
 	if(k > n) {
 		printf("You are asking for more neighbors than there are\n");
 		return -1;
 	}
 
-	// Initialize X	
+	// Initialize X
 	double* X = (double*)malloc(n*d*sizeof(double));
 	if(X == NULL) {
 		printf("Couldn't allocate memory for X\n");
