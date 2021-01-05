@@ -17,6 +17,8 @@ void swapInt(int* a, int* b);
 
 void swapDouble(double* a, double* b);
 
+int min(int a, int b);
+
 int partition(double* D, int* sortedIndexes, int start, int end);
 
 void quicksort(double* D, int* sortedIndexes, int start, int end, int k);

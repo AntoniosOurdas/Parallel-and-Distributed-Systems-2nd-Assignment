@@ -2,10 +2,10 @@
 
 #define BILLION 1000000000L;
 
-struct timespec start_time;
+// struct timespec start_time;
 struct timespec stop_time;
 
-double calculateExecutionTime()
+double calculateExecutionTime(struct timespec start_time)
 {
 
     clock_gettime(CLOCK_MONOTONIC, &stop_time);
@@ -21,25 +21,58 @@ double calculateExecutionTime()
     simple functions used for printing matrix contents
 */
 void printMatrixInt(int* A, int n, int m) {
-	for(int i = 0; i < n; ++i) {
-		for(int j = 0; j < m; ++j) {
+  for(int j = 0; j < m*2+3; ++j) {
+    printf("-");
+  }
+  printf("\n");
+  for(int i = 0; i < n; ++i) {
+    printf("| ");
+    for(int j = 0; j < m; ++j) {
 			printf("%d ", A[i*m+j]);
 		}
-		printf("\n");
+		printf("|\n");
 	}
+  for(int j = 0; j < m*2+3; ++j) {
+    printf("-");
+  }
+  printf("\n");
 }
 
 void printMatrixDouble(double* A, int n, int m) {
-	for(int i = 0; i < n; ++i) {
-		for(int j = 0; j < m; ++j) {
-			printf("%lf ", A[i*m+j]);
+  for(int j = 0; j < m*11; ++j) {
+    printf("-");
+  }
+  printf("\n");
+  for(int i = 0; i < n; ++i) {
+    printf("| ");
+    for(int j = 0; j < m; ++j) {
+      if(A[i*m+j] < 0.0)
+        printf("%lf ", A[i*m+j]);
+      else
+        printf(" %lf ", A[i*m+j]);
 		}
-		printf("\n");
+		printf(" |\n");
 	}
+  for(int j = 0; j < m*11; ++j) {
+    printf("-");
+  }
+  printf("\n");
 }
 
-void printMatrixMatlabFormat(double* A, int n, int m) {
-  printf("A = [");
+void printMatrixMatlabFormatInt(int* A, int n, int m, char* name) {
+  printf("%s = [", name);
+  for(int i = 0; i < n; ++i) {
+    for(int j = 0; j < m; ++j) {
+      printf("%d ", A[i*m+j]);
+    }
+    if(i < n -1)
+      printf(";");
+  }
+  printf("];\n");
+}
+
+void printMatrixMatlabFormatDouble(double* A, int n, int m, char* name) {
+  printf("%s = [", name);
   for(int i = 0; i < n; ++i) {
     for(int j = 0; j < m; ++j) {
       printf("%lf ", A[i*m+j]);
@@ -47,7 +80,7 @@ void printMatrixMatlabFormat(double* A, int n, int m) {
     if(i < n -1)
       printf(";");
   }
-  printf("]\n");
+  printf("];\n");
 }
 
 /*
