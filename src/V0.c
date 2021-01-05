@@ -161,15 +161,19 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	printMatrixMatlabFormat(X, n, d);
-	printMatrixMatlabFormat(Y, m, d);
-	// Find and print knnresult
-	knnresult kNNresult = kNN(X, Y, n, m, d, k);
+	struct timespec start_time;
+	// printMatrixMatlabFormatDouble(X, n, d);
+	// printMatrixMatlabFormatDouble(Y, m, d);
 
-	printf("%d nearest neighbors distances:\n", k);
-	printMatrixDouble(kNNresult.ndist, m, k);
-	printf("\n%d nearest neighbors indexes:\n", k);
-	printMatrixInt(kNNresult.nidx, m, k);
+	// Find and print knnresult
+	clock_gettime(CLOCK_MONOTONIC, &start_time);
+	knnresult kNNresult = kNN(X, Y, n, m, d, k);
+	printf("\nV0 run time: %f\n", calculateExecutionTime(start_time));
+
+	// printf("%d nearest neighbors distances:\n", k);
+	// printMatrixDouble(kNNresult.ndist, m, k);
+	// printf("\n%d nearest neighbors indexes:\n", k);
+	// printMatrixInt(kNNresult.nidx, m, k);
 
 	free(X);
 	free(Y);
