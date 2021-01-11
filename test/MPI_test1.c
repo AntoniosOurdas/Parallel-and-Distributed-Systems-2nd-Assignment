@@ -1,21 +1,21 @@
-// required MPI include file  
+// required MPI include file
 #include "mpi.h"
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
-   int  numtasks, rank, len, rc; 
+   int  numtasks, rank, len, rc;
    char hostname[MPI_MAX_PROCESSOR_NAME];
 
-   // initialize MPI  
+   // initialize MPI
    MPI_Init(&argc,&argv);
 
-   // get number of tasks 
+   // get number of tasks
    MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
 
-   // get my rank  
+   // get my rank
    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
-   // this one is obvious  
+   // this one is obvious
    MPI_Get_processor_name(hostname, &len);
    printf ("Number of tasks= %d My rank= %d Running on %s Cmd args %s %s Length %d\n", numtasks,rank,hostname,argv[0], argv[1], len);
    int a = 0;
@@ -25,9 +25,9 @@ int main(int argc, char *argv[]) {
       b = a*i/(i+1)*9;
    }
 
-        // do some work with message passing 
+        // do some work with message passing
 
 
-   // done with MPI  
+   // done with MPI
    MPI_Finalize();
 }
