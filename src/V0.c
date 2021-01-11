@@ -1,7 +1,5 @@
 #include "utilities.h"
 
-#define BILLION 1000000000L;
-
 // Definition of the kNN result struct
 typedef struct knnresult {
 	int * nidx;		 //!< Indices (0-based) of nearest neighbors   [m-by-k]

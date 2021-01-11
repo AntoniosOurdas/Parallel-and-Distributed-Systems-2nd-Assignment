@@ -470,7 +470,7 @@ int main(int argc, char* argv[]) {
 	knnresult kNNresult = distrAllkNN(X, n, d, k);
 
 	if(rank == 0) {
-		printf("\nV1 run time: %f\n", calculateExecutionTime(start_time));
+		printf("%f ", calculateExecutionTime(start_time));
 	}
 	// printf("%d nearest neighbors distances:\n", k);
 	// printMatrixDouble(kNNresult.ndist, n, k);
