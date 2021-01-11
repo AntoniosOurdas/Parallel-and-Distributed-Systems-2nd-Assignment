@@ -7,7 +7,7 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
-double calculateExecutionTime();
+double calculateExecutionTime(struct timespec start_time);
 
 void printMatrixInt(int* A, int n, int m);
 
@@ -23,7 +23,7 @@ int partition(double* D, int* sortedIndexes, int start, int end);
 
 void quicksort(double* D, int* sortedIndexes, int start, int end, int k);
 
-void findDistanceMatrix(double* X, double* Y, int n, int m, int d, double* D, int low, int high);
+void findDistanceMatrix(double* X, double* Y, int n, int m, int d, double* D);
 
 void findDMatrix(double* X, double* Y,int n, int m, int d, double* D);
 

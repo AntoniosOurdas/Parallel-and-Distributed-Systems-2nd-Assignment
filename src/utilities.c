@@ -101,6 +101,10 @@ void swapDouble(double* a, double* b) {
 	*b = t;
 }
 
+int min(int a, int b) {
+  return (a > b) ? b : a;
+}
+
 int partition(double* D, int* indices, int start, int end)
 {
     double pivot = D[end]; // pivot
@@ -163,70 +167,74 @@ void quicksort(double* D, int* indices, int start, int end, int k)
    Y [m-by-d]
    D [m-by-n]
 */
-void findDistanceMatrix(double* X, double* Y, int n, int m, int d, double* D, int low, int high) {
+void findDistanceMatrix(double* X, double* Y, int n, int m, int d, double* D) {
 
-  // Block size of query Y
-  int size = high - low + 1;
+  int blocksNo = min(m, 20);
+  int block_size = m / blocksNo;
+  double* X2 = (double*)malloc(n*d*sizeof(double));
+	double* Y2 = (double*)malloc(block_size*d*sizeof(double));
 
-  // e*e^T matrix [d-by-n]
-  double* e1 = (double*)malloc(d*n*sizeof(double));
-  // e^T*e matrix [size-by-d]
-  double* e2 = (double*)malloc(size*d*sizeof(double));
-
-  // matrices have all elements 1.0
-  for(int i = 0; i < d*n; ++i)
-    e1[i] = 1.0;
-
-  for (int i = 0; i < size*d; ++i)
-    e2[i] = 1.0;
-
-  // Y.*Y product
-  double* dotP_Y = (double*)malloc(size*d*sizeof(double));
-  // X.*X product
-  double* dotP_X = (double*)malloc(d*n*sizeof(double));
-
-  // Calculate
-  for(int i = low; i < low + size; ++i) {
-    for(int j = 0; j < d; ++j) {
-      dotP_Y[i*d+j] = Y[i*d+j] * Y[i*d+j];
-    }
-  }
+  double* e1 = (double*)malloc(d*n*sizeof(double)); // [d-by-m] matrix with 1s (e*e^T)
+  double* e2 = (double*)malloc(block_size*d*sizeof(double));	// [m-by-d] matrix with 1s (e*e^T)
 
   for(int i = 0; i < n; ++i) {
     for(int j = 0; j < d; ++j) {
-      dotP_X[i*d+j] = X[i*d+j] * X[i*d+j];
+      X2[i*d+j] = X[i*d+j]*X[i*d+j];
     }
   }
 
-  double* A = (double*)malloc(size*n*sizeof(double));
-  for(int i = 0; i < n*size; ++i)
-    A[i] = 0.0;
+  for(int b = 0; b < blocksNo; ++b) {
 
-  printf("size=%d\tn=%d\td=%d\n", size, n, d);
-  // A <- e2*dotP_X^T
-  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, size, n, d, 1.0, e2, size, dotP_X, d, 0.0, A, size);
-  // A <- -2*X*Y^T + A
-  // cblas_dgemm();
-  // A <- dotP_Y*e2 + A
-  // cblas_dgemm();
+  	for(int i = 0; i < block_size; ++i) {
+  		for(int j = 0; j < d; ++j) {
+  			Y2[i*d+j] = Y[b*d*block_size+i*d+j]*Y[b*d*block_size+i*d+j];
+  		}
+  	}
 
-  printf("X = \n");
-  printMatrixDouble(X, n, d);
-  printf("X.*X = \n");
-  printMatrixDouble(dotP_X, n, d);
-  printf("e2 = \n");
-  printMatrixDouble(e2, size, d);
-  printf("A = \n");
-  printMatrixDouble(A, size, n);
-  printf("Y = \n");
-  printMatrixDouble(Y, size, d);
-  printf("Y.*Y = \n");
-  printMatrixDouble(dotP_Y, size, d);
+  	for(int i = 0; i < d; ++i) {
+  		for(int j = 0; j < n; ++j) {
+  			e1[i*n+j] = 1.0;
+  		}
+  	}
 
+  	for(int i = 0; i < block_size; ++i) {
+  		for(int j = 0; j < d; ++j) {
+  			e2[i*d+j] = 1.0;
+  		}
+  	}
+    // printf("b = %d\n", b);
+  	// printMatrixDouble(X,n,d);
+  	// printMatrixDouble(Y+b*d*block_size,block_size,d);
+
+  	// printMatrixDouble(X2,n,d);
+  	// printMatrixDouble(Y2,block_size,d);
+  	// printMatrixDouble(e1,d,n);
+  	// printMatrixDouble(e2,block_size,d);
+
+    struct timespec start_time;
+
+  	clock_gettime(CLOCK_MONOTONIC, &start_time);
+
+  	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, block_size, n, d, 1, Y2, d, e1, n, 0.0, D+b*block_size*n, n);
+  	// printMatrix(D, m, n);
+
+  	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, block_size, n, d, -2.0, Y+b*block_size*d, d, X, d, 1.0, D+b*block_size*n, n);
+  	// printMatrix(D, m, n);
+
+  	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, block_size, n, d, 1.0, e2, d, X2, d, 1.0, D+b*block_size*n, n);
+  	// printMatrix(D, m, n);
+
+    // printf("D for b = %d\n", b);
+    // printMatrixDouble(D+b*n*block_size, block_size, n);
+  	// printf("BLAS run time: %f\n", calculateExecutionTime(start_time));
+
+  }
+
+  free(Y2);
   free(e1);
   free(e2);
-  free(dotP_X);
-  free(dotP_Y);
+  free(X2);
+
 }
 
 void findDMatrix(double* X, double* Y,int n, int m, int d, double* D) {
