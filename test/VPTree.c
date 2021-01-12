@@ -230,17 +230,17 @@ void makeVPT(VPT* T, double* X, int n, int d) {
       // except from VP of course
       double* dVP = (double*)malloc((n-1)*sizeof(double));
       for(int i = 1; i < n; ++i) {
-        dVP[i] = 0;
+        dVP[i-1] = 0;
         for(int j = 0; j < d; ++j) {
-          dVP[i] += (X[i*d+j] - T->VP[j])*(X[i*d+j] - T->VP[j]);
+          dVP[i-1] += (X[i*d+j] - T->VP[j])*(X[i*d+j] - T->VP[j]);
         }
-        dVP[i] = sqrt(dVP[i]);
+        dVP[i-1] = sqrt(dVP[i-1]);
       }
 
-      printMatrixDouble(dVP, n, 1);
+      printMatrixDouble(dVP, n-1, 1);
 
       // Find median and create subtrees
-      T->median = kthSmallest(X, 0, n-1, (n-1)/ 2);
+      T->median = kthSmallest(dVP, 0, n-1, (n-1)/2);
       printf("median = %lf\n", T->median);
 
       double* X1 = NULL;
@@ -253,7 +253,12 @@ void makeVPT(VPT* T, double* X, int n, int d) {
         if(dVP[i] < T->median) {
 
           ++sizeX1;
-          X1 = (double*)realloc(X1, sizeX1*d*sizeof(double));
+          if(sizeX1 == 1) {
+            X1 = (double*)malloc(sizeX1*d*sizeof(double));
+          } else {
+            X1 = (double*)realloc(X1, sizeX1*d*sizeof(double));
+          }
+
           for(int j = 0; j < d; ++j) {
             X1[(sizeX1-1)*d+j] = X[i*d+j];
           }
@@ -261,7 +266,12 @@ void makeVPT(VPT* T, double* X, int n, int d) {
         } else {
 
           ++sizeX2;
-          X2 = (double*)realloc(X2, sizeX2*d*sizeof(double));
+          if(sizeX2 == 1) {
+            X2 = (double*)malloc(sizeX2*d*sizeof(double));
+          } else {
+            X2 = (double*)realloc(X2, sizeX2*d*sizeof(double));
+          }
+
           for(int j = 0; j < d; ++j) {
             X2[(sizeX2-1)*d+j] = X[i*d+j];
           }
@@ -304,7 +314,7 @@ int main(int argc, char* argv[]) {
   T->out = NULL;
   // print2D(T);
   makeVPT(T, X, n, d);
-  
+
   delete(T);
   free(X);
 
