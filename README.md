@@ -1,9 +1,9 @@
 # Parallel-and-Distributed-Systems 2nd Assignment
-2nd assignment for PDS course of ECE department of Aristotle Univeristy of Thessaloniki
 
 **Antonios Ourdas | AEM: 9358**
 
-# Introduction
-In this 2nd assignment we were asked to implement an all kNN algorithm to find the k nearest neighbors for every point of a given corpus set using MPI.
+This repository contains all source files and results used for the 2nd assignment in Parallel and Distributed Systems course regarding a knn search implemented with MPI and Vantage point trees:
 
-# V0
+1. Diagrams and results are contained in Diagrams directory.
+
+2. Source code (C files, headers, Makefile and scripts) are contained in src directory.

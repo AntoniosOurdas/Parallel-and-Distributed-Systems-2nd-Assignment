@@ -36,6 +36,6 @@ if [ "$4" -lt 1 ]; then
   exit 1
 fi
 
-rm V1_BLAS
-make V1_BLAS
-mpirun -np "$4" V1_BLAS "$1" "$2" "$3"
+rm V2_BLAS
+make V2_BLAS
+mpirun -np "$4" V2_BLAS "$1" "$2" "$3"
